@@ -1,18 +1,19 @@
 import Imap from 'imap';
-import Errorlogger from './Errorlogger';
-import playwrightAutomation from './playwrightAutomation';
+import Errorlogger from '@/Errorlogger';
+import Logger from '@/Logger';
+import playwrightAutomation from '@/playwrightAutomation';
 
 const imap = new Imap({
   user: process.env.IMAP_USER ?? '',
   password: process.env.IMAP_PASSWORD ?? '',
   host: process.env.IMAP_HOST ?? '',
-  port: Number(process.env.IMAP_PORT) ?? 993,
+  port: Number(process.env.IMAP_PORT) || 993,
   tls: true,
   tlsOptions: { rejectUnauthorized: false },
-  connTimeout: 3_600_000, // set to 1 Hour to reconnect, if Connection is lost
+  connTimeout: 3_600_000,
   keepalive: {
-    interval: 10000, // Send NOOP commands every 10 seconds
-    idleInterval: 300000, // Re-send IDLE command every 5 minutes
+    interval: 10000,
+    idleInterval: 300000,
   },
 });
 
@@ -26,12 +27,12 @@ async function handleEmails() {
       new Errorlogger(err);
     }
 
-    // No E-Mails found => skip
-    if (!results || !results.length) {
+    if (!results?.length) {
       return;
     }
 
-    // https://github.com/mscdex/node-imap#:~:text=currently%20open%20mailbox.-,Valid%20options%20properties%20are%3A,-*%20**markSeen**%20%2D%20_boolean_%20%2D%20Mark
+    Logger.info(`Netflix email received (${results.length} message(s))`);
+
     const fetchingData = imap.fetch(results, { bodies: 'TEXT', markSeen: true });
     fetchingData.on('message', (msg) => {
       let body = '';
@@ -41,21 +42,22 @@ async function handleEmails() {
         });
 
         stream.on('end', async () => {
-          // we're removing all new line before (quoted-printable)
-          const quotedPrintable = body.replace(/=(\r?\n|$)/g, '').replace(/=([a-f0-9]{2})/ig, (m, code) => String.fromCharCode(parseInt(code, 16)));
-          // Search specific link, open and click
+          const quotedPrintable = body
+            .replace(/=(\r?\n|$)/g, '')
+            .replace(/=([a-f0-9]{2})/ig, (_, code) => String.fromCharCode(parseInt(code, 16)));
+          
           const regex = /"(https:\/\/www\.netflix\.com\/account\/update-primary-location[^"]*)"/;
           const match = quotedPrintable.match(regex);
 
-          if (match && match[1]) {
+          if (match?.[1]) {
+            Logger.info('Update link found, processing...');
             try {
-              const updatePrimaryLink = new URL(match[1]);
-              await playwrightAutomation(updatePrimaryLink.toString());
+              await playwrightAutomation(match[1]);
             } catch (e) {
               new Errorlogger(e);
             }
           } else {
-            new Errorlogger('no specific Netflix link in E-Mail found');
+            new Errorlogger('No Netflix update link found in email');
           }
         });
       });
@@ -68,28 +70,26 @@ async function handleEmails() {
 }
 
 (function main() {
-  // Connect to the IMAP server
+  Logger.info('Starting IMAP Netflix Automation...');
+  
   imap.connect();
 
-  // start listening to Inbox
   imap.once('ready', () => {
     imap.openBox('INBOX', false, (err) => {
       if (err) {
-        throw new Errorlogger(`open INBOX Error => ${err}`);
+        throw new Errorlogger(`Open INBOX Error: ${err}`);
       }
 
-      console.log('IMAP connection is ready, start listening Emails on INBOX');
-      imap.on('mail', () => handleEmails());
+      Logger.success('Connected to IMAP, listening for emails...');
+      imap.on('mail', handleEmails);
     });
   });
 
-  // Handle Imap errors
   imap.once('error', (err: Error) => {
-    throw new Errorlogger(`make sure you E-Mail Provider enabled IMAP and you IMAP Username and Password are correct: ${err}`);
+    throw new Errorlogger(`IMAP connection failed: ${err}`);
   });
 
-  // End connection on close
   imap.once('end', () => {
-    console.log('IMAP connection ended');
+    Logger.info('IMAP connection ended');
   });
-}());
+})();

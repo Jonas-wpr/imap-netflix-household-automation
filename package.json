@@ -38,8 +38,8 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@playwright/test": "1.51.1",
+    "@playwright/test": "^1.57.0",
     "extensionless": "^1.9.9",
-    "imap": "^0.8.19"
+    "imap": "^0.8.17"
   }
 }

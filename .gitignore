@@ -1,7 +1,29 @@
-/node_modules
-/dist
-.yarn-error.log
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Environment
 .env
-.idea
+.env.local
+.env.*
+!.env.dist
+
+# Logs
+*.log
+
+# IDE
+.idea/
 .vscode/
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Playwright
+playwright-report/
+test-results/
+
+# Session/Cache
+tmp/
