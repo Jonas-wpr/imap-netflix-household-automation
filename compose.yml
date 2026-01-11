@@ -10,5 +10,5 @@ services:
       - .:/app
     env_file:
       - .env
-    command: /bin/sh -c "yarn install && yarn start"
+    command: /bin/sh -c "yarn install && npx playwright install chromium && yarn start"
     stdin_open: true
