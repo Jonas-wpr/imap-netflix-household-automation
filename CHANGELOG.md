@@ -1,3 +1,28 @@
+# Changelog
+
+## 1.3.0 (2025-01-12)
+
+### Features
+
+- Add centralized logging system with timestamps (`Logger.ts`)
+- Add structured log output with levels: INFO, SUCCESS, ERROR
+- Add GitHub Actions workflow for automatic Docker image publishing to ghcr.io
+- Add Dockerfile for optimized container builds
+- Add `.dockerignore` to reduce build context size
+
+### Performance
+
+- Block unnecessary resources (images, fonts, media) in Playwright for faster page loads
+- Add Chrome launch arguments for headless optimization
+- Use `waitUntil: 'domcontentloaded'` instead of `'load'` for faster navigation
+
+### Internal Changes
+
+- Refactor `Errorlogger` to use centralized `Logger`
+- Update `.gitignore` with comprehensive patterns
+- Add `reducedMotion: 'reduce'` browser context option
+- Improve code documentation
+
 ## 1.2.0 (2025-03-31)
 
 ### Bugfixes

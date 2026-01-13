@@ -5,6 +5,10 @@ import Logger from './Logger';
 
 const STORAGE_STATE_PATH = './tmp/storageState.json';
 
+/**
+ * Opens the Netflix update link and clicks the confirmation button.
+ * Saves session state to avoid repeated logins.
+ */
 export default async function playwrightAutomation(url: string) {
   Logger.info('Starting browser automation...');
   
@@ -13,7 +17,6 @@ export default async function playwrightAutomation(url: string) {
   const browser = await chromium.launch({
     headless: true,
     args: [
-      '--disable-gl-drawing-for-tests',
       '--disable-gpu',
       '--disable-dev-shm-usage',
       '--disable-extensions',
@@ -21,7 +24,6 @@ export default async function playwrightAutomation(url: string) {
       '--disable-background-networking',
       '--disable-sync',
       '--disable-translate',
-      '--metrics-recording-only',
       '--mute-audio',
       '--no-first-run',
     ],
@@ -30,16 +32,13 @@ export default async function playwrightAutomation(url: string) {
   const browserContext = await browser.newContext({
     storageState: storageStateExists ? STORAGE_STATE_PATH : undefined,
     javaScriptEnabled: true,
-    hasTouch: false,
-    isMobile: false,
     reducedMotion: 'reduce',
   });
 
+  // Block unnecessary resources to improve performance
   await browserContext.route('**/*', (route) => {
-    const resourceType = route.request().resourceType();
     const blockedTypes = ['image', 'media', 'font'];
-
-    if (blockedTypes.includes(resourceType)) {
+    if (blockedTypes.includes(route.request().resourceType())) {
       return route.abort();
     }
     return route.continue();
@@ -55,6 +54,7 @@ export default async function playwrightAutomation(url: string) {
       timeout: 30_000,
     });
 
+    // Retry clicking until success element appears (handles slow DOM hydration)
     await expect(async () => {
       const updatePrimaryButton = page.locator("button[data-uia='set-primary-location-action']");
       await updatePrimaryButton.click({ force: true });
@@ -66,6 +66,7 @@ export default async function playwrightAutomation(url: string) {
       timeout: 30_000,
     });
 
+    // Persist session for future requests
     await browserContext.storageState({ path: STORAGE_STATE_PATH });
     Logger.success('Household location updated successfully!');
   } catch (error) {

@@ -10,6 +10,7 @@ const imap = new Imap({
   port: Number(process.env.IMAP_PORT) || 993,
   tls: true,
   tlsOptions: { rejectUnauthorized: false },
+  // Keep connection alive for long-running process
   connTimeout: 3_600_000,
   keepalive: {
     interval: 10000,
@@ -17,6 +18,10 @@ const imap = new Imap({
   },
 });
 
+/**
+ * Search for unread Netflix emails and process update links.
+ * Triggered on new email arrival via IMAP IDLE.
+ */
 async function handleEmails() {
   imap.search([
     'UNSEEN',
@@ -25,6 +30,7 @@ async function handleEmails() {
   ], (err, results) => {
     if (err) {
       new Errorlogger(err);
+      return;
     }
 
     if (!results?.length) {
@@ -42,12 +48,14 @@ async function handleEmails() {
         });
 
         stream.on('end', async () => {
-          const quotedPrintable = body
+          // Decode quoted-printable encoding (e.g., =3D -> =)
+          const decodedBody = body
             .replace(/=(\r?\n|$)/g, '')
             .replace(/=([a-f0-9]{2})/ig, (_, code) => String.fromCharCode(parseInt(code, 16)));
           
+          // Extract Netflix household update link
           const regex = /"(https:\/\/www\.netflix\.com\/account\/update-primary-location[^"]*)"/;
-          const match = quotedPrintable.match(regex);
+          const match = decodedBody.match(regex);
 
           if (match?.[1]) {
             Logger.info('Update link found, processing...');
@@ -75,12 +83,15 @@ async function handleEmails() {
   imap.connect();
 
   imap.once('ready', () => {
+    // Open INBOX in read-write mode (false = not read-only)
     imap.openBox('INBOX', false, (err) => {
       if (err) {
         throw new Errorlogger(`Open INBOX Error: ${err}`);
       }
 
       Logger.success('Connected to IMAP, listening for emails...');
+      
+      // Listen for new emails via IMAP IDLE
       imap.on('mail', handleEmails);
     });
   });

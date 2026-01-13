@@ -1,0 +1,11 @@
+node_modules/
+dist/
+tmp/
+.env
+.env.*
+!.env.dist
+.git/
+.gitignore
+.vscode/
+.idea/
+*.log

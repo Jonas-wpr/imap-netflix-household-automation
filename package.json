@@ -1,7 +1,7 @@
 {
   "name": "imap-netflix-household-automation",
-  "author": "ducphu0ng",
-  "version": "1.0.0",
+  "author": "Jonas-wpr",
+  "version": "1.3.0",
   "description": "IMAP Netflix Household automation",
   "license": "MIT",
   "type": "module",
@@ -19,7 +19,8 @@
     ]
   },
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "https://github.com/Jonas-wpr/imap-netflix-household-automation.git"
   },
   "keywords": [
     "node",
@@ -41,5 +42,8 @@
     "@playwright/test": "^1.57.0",
     "extensionless": "^1.9.9",
     "imap": "^0.8.17"
-  }
+  },
+  "contributors": [
+    "ducphu0ng (https://github.com/ducphu0ng)"
+  ]
 }

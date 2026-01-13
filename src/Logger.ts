@@ -1,5 +1,8 @@
 type LogLevel = 'INFO' | 'SUCCESS' | 'ERROR';
 
+/**
+ * Centralized logger with timestamps for production use.
+ */
 export default class Logger {
   private static formatDate(): string {
     return new Intl.DateTimeFormat('default', {
