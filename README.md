@@ -54,7 +54,7 @@ Lets speed it up!
 
 1. **Clone the repository**
    ```sh
-   git clone https://github.com/ducphu0ng/imap-netflix-household-automation.git
+   git clone https://github.com/Jonas-wpr/imap-netflix-household-automation.git
    cd imap-netflix-household-automation
    ```
 
@@ -74,7 +74,7 @@ That’s it! Docker will automatically install all the necessary dependencies an
 # compose.yml
 services:
   imap-netflix-household-automation:
-    image: ghcr.io/ducphu0ng/imap-netflix-household-automation:latest
+    build: .
     container_name: imap-netflix-household-automation
     restart: unless-stopped
     env_file:
@@ -85,14 +85,17 @@ services:
 
 ## Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `IMAP_USER` | Your email address | `your@email.com` |
-| `IMAP_PASSWORD` | Your email password or app password | `your-password` |
-| `IMAP_HOST` | IMAP server hostname | `imap.gmail.com` |
-| `IMAP_PORT` | IMAP port (usually 993 for TLS) | `993` |
-| `TARGET_EMAIL_ADDRESS` | Netflix sender address to monitor | `info@netflix.com` |
-| `TARGET_EMAIL_SUBJECT` | Email subject to filter | `How to update your Netflix Household` |
+Required (set in `.env`):
+
+- IMAP_USER — mailbox username
+- IMAP_PASSWORD — mailbox password or app password
+- IMAP_HOST — IMAP server host
+- IMAP_PORT — IMAP server port (usually 993)
+- TARGET_EMAIL_ADDRESS — expected sender (e.g. `info@account.netflix.com`)
+- TARGET_EMAIL_SUBJECT — substring used to identify the initial verification email (server-side IMAP header search is substring-based)
+- CONFIRMATION_SUBJECT — substring used to identify the follow-up confirmation email (e.g. `Bestätigung`)
+
+Security: keep credentials out of source control and use secrets in CI/containers.
 
 > **💡 Tip:** For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833) instead of your regular password.
 
@@ -123,7 +126,6 @@ services:
 - **Performance optimized** - Blocks images, fonts, and media for faster page loads
 - **Structured logging** - Timestamps and log levels for easy debugging
 - **Docker ready** - Pre-built image available on GitHub Container Registry
-- **Reconnection handling** - Automatically reconnects on connection loss
 
 ## License
 

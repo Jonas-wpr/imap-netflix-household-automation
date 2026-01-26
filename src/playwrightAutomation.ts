@@ -1,13 +1,11 @@
 import { existsSync } from "fs";
 import { chromium, expect } from '@playwright/test';
-import Errorlogger from './Errorlogger';
 import Logger from './Logger';
 
 const STORAGE_STATE_PATH = './tmp/storageState.json';
 
 /**
- * Opens the Netflix update link and clicks the confirmation button.
- * Saves session state to avoid repeated logins.
+ * Automate the Netflix "update primary location" confirmation and persist session state.
  */
 export default async function playwrightAutomation(url: string) {
   Logger.info('Starting browser automation...');
@@ -35,7 +33,7 @@ export default async function playwrightAutomation(url: string) {
     reducedMotion: 'reduce',
   });
 
-  // Block unnecessary resources to improve performance
+  // Block images/media/fonts to improve speed and reduce bandwidth.
   await browserContext.route('**/*', (route) => {
     const blockedTypes = ['image', 'media', 'font'];
     if (blockedTypes.includes(route.request().resourceType())) {
@@ -54,7 +52,7 @@ export default async function playwrightAutomation(url: string) {
       timeout: 30_000,
     });
 
-    // Retry clicking until success element appears (handles slow DOM hydration)
+    // Retry clicking until the success element appears (handles slow DOM hydration).
     await expect(async () => {
       const updatePrimaryButton = page.locator("button[data-uia='set-primary-location-action']");
       await updatePrimaryButton.click({ force: true });
@@ -66,11 +64,11 @@ export default async function playwrightAutomation(url: string) {
       timeout: 30_000,
     });
 
-    // Persist session for future requests
+    // Persist session so repeated logins are avoided.
     await browserContext.storageState({ path: STORAGE_STATE_PATH });
     Logger.success('Household location updated successfully!');
   } catch (error) {
-    throw new Errorlogger(`Netflix update failed for (${url}): ${error}`);
+    throw Logger.createError(`Netflix update failed for (${url}): ${error}`);
   } finally {
     await browser.close();
   }

@@ -2,8 +2,6 @@ services:
   imap-netflix-household-automation:
     container_name: imap-netflix-household-automation
     build: .
-    ipc: host
-    network_mode: host
     restart: unless-stopped
     env_file:
       - .env

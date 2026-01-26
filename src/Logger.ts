@@ -1,7 +1,7 @@
 type LogLevel = 'INFO' | 'SUCCESS' | 'ERROR';
 
 /**
- * Centralized logger with timestamps for production use.
+ * Central logger that prefixes messages with timestamps and levels.
  */
 export default class Logger {
   private static formatDate(): string {
@@ -26,5 +26,14 @@ export default class Logger {
   static error(message: string | Error): void {
     const msg = message instanceof Error ? message.message : message;
     this.log('ERROR', msg);
+  }
+
+  /**
+   * Log the provided value and return an Error suitable for throwing.
+   */
+  static createError(error: unknown): Error {
+    const message = error instanceof Error ? error.message : String(error);
+    this.error(message);
+    return new Error(message);
   }
 }
